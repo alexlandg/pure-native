@@ -105,7 +105,7 @@ npm install pure-native --save
 
   `interpolate(id, inputrange, outputrange, extrapolate)` Interpolating with Animated
   ```javascript
-    import {interpolate} from 'pure-native-native'
+    import {interpolate} from 'pure-native'
 
     let style = {
       wrap: (active1, active2) => ({
