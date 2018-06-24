@@ -1,5 +1,5 @@
 
-import {appregistry, react, updates, dimensions, view, button, text, animated, animate, parallel, newanimatedx, easing, interpolate} from 'pure-native'
+import {appregistry, react, update, dimensions, view, button, text, animated, animate, parallel, newanimatedx, easing, interpolate} from 'pure-native'
 
 const {width, height} = dimensions
 
@@ -31,17 +31,15 @@ const style = {
 const counter = (state) =>
   text(`${state.counter}`)
 
-const scene = (id, color, position, state, store) =>
-  view(style.scene(state[id], color, position), {animated,
-    update: store.update, id: 'counter',
-  },
+const scene = (id, color, position, state) =>
+  view(style.scene(state[id], color, position), {animated, id: 'counter'},
     () => counter(state)()
   )
 
-const scenes = (state, store) =>
+const scenes = (state) =>
   view(style.scenes,
-    scene('scene1', 'whitesmoke', -100, state, store),
-    scene('scene2', 'pink', 100, state, store)
+    scene('scene1', 'whitesmoke', -100, state),
+    scene('scene2', 'pink', 100, state)
   )
 
 const movescene = (id, state) =>
@@ -57,16 +55,16 @@ const parallelmove = (state) =>
     ])
   })
 
-const handle = (id, i, state, store) =>
+const handle = (id, i, state) =>
   button(id, style.button, {
     onPress: () => {
       state.counter += i
-      store.update.do('counter')
+      update.do('counter')
     }
   })
 
 
-const testapp = (store) => {
+const testapp = () => {
   let state = {
     counter: 0,
     scene1 : newanimatedx(0),
@@ -74,9 +72,9 @@ const testapp = (store) => {
   }
 
   return view(style.wrap,
-    scenes(state, store),
-    handle('counter++', 1, state, store),
-    handle('counter--', -1, state, store),
+    scenes(state),
+    handle('counter++', 1, state),
+    handle('counter--', -1, state),
     movescene('scene1', state),
     movescene('scene2', state),
     parallelmove(state)
@@ -84,13 +82,8 @@ const testapp = (store) => {
 }
 
 
-let store = {
-  update: updates()
-}
-
-
 let application = class App extends react.Component {
-  render = () => testapp(store)()
+  render = () => testapp()()
 }
 
-appregistry.registerComponent('TestApp', () => application) 
+appregistry.registerComponent('TestApp', () => application)
