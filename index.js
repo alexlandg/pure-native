@@ -16,7 +16,9 @@ import {
 
   ActionSheetIOS, AlertIOS, DatePickerIOS, ImagePickerIOS, MaskedViewIOS, NavigatorIOS,
   PickerIOS, ProgressViewIOS, SafeAreaView, SegmentedControlIOS,
-  SnapshotViewIOS, StatusBarIOS, TabBarIOS, VibrationIOS
+  SnapshotViewIOS, StatusBarIOS, TabBarIOS, VibrationIOS,
+
+  NativeModules
 } from 'react-native'
 
 import Component from './component'
@@ -38,6 +40,32 @@ const updates = (arr = []) => ({
       : arr[id] = []
 })
 
+const update = updates()
+
+async function astorage(id, props, cb) {
+  try {
+    let result = await asyncstorage[id](...props)
+    cb && cb(result)
+  }
+  catch (e) {console.log(`Async Storage ${id} Error: `, e)}
+}
+
+const store = {}
+
+const storage = {
+  get: (id, cb) => astorage('getItem', [id], cb),
+  set: (id, data, cb) => astorage('setItem', [id, data], cb),
+  merge: (id, value, cb) => astorage('mergeItem', [id, value], cb),
+  remove: (id, cb) => astorage('removeItem', [id], cb),
+  multiget: (arr, cb) => astorage('multiGet', [arr], cb),
+  multiset: (arr, cb) => astorage('multiSet', [arr], cb),
+  multimerge: (arr, cb) => astorage('multiMerge', [arr], cb),
+  multiremove: (arr, cb) => astorage('multiRemove', [arr], cb),
+  getkeys: (cb) => astorage('getAllKeys', [], cb),
+  clear: (cb) => astorage('clear', [], cb),
+  flush: (cb) => astorage('flushGetRequests', [], cb)
+}
+
 
 const carry = arr =>
   arr instanceof Array
@@ -58,7 +86,12 @@ const swapbutton = (children, style, props) => {
 
   if (typeof children !== 'string') {
     flag = true
-    [children, style, props] = [props, children, style]
+
+    let _ = style
+
+    style = children
+    children = props
+    props = _
   }
 
   return flag
@@ -76,13 +109,13 @@ const updatekeys = ['id', 'from', 'update', 'willmount', 'didmount', 'willupdate
 
 const justcomponent = (id, style, props, children) => {
   let element = props.animated ? Animated.createAnimatedComponent(id) : id
-  let haschild = children && ((children instanceof Array && children.length > 0) || typeof children == 'string' || children.type && true)
+  let haschild = children && ((children instanceof Array && children.length > 0) || children instanceof Function || typeof children == 'string' || children.type && true)
 
   return React.createElement(element, {style, ...props, ...haschild ? {children} : {}})
 }
 
 const component = (id, style, {props = {}, children}) => {
-  if (props.update || props.willmount || props.didmount || props.willunmount) {
+  if (props.id || props.update || props.willmount || props.didmount || props.willunmount) {
     let updateprops = {}
 
     updatekeys.forEach(key => {
@@ -92,6 +125,8 @@ const component = (id, style, {props = {}, children}) => {
       }
     })
 
+    if (!updateprops.update) updateprops.update = update
+
     return <Component {...updateprops} children={() => justcomponent(id, style, props, carry(children))}/>
   }
   else return justcomponent(id, style, props, carry(children))
@@ -100,7 +135,7 @@ const component = (id, style, {props = {}, children}) => {
 
 const accessibilityinfo = AccessibilityInfo
 
-const activityindicator = (...props) => component(ActivityIndicator, {}, {props})
+const activityindicator = (props) => component(ActivityIndicator, {}, {props})
 
 const alert = (...props) => Alert.alert(...props)
 
@@ -117,6 +152,7 @@ const clipboard = Clipboard
 const dimensions = {
   width : Dimensions.get('window').width,
   height: Dimensions.get('window').height,
+  //...Dimensions
   get   : (id) => Dimensions.get(id),
   set   : (obj) => Dimensions.set(obj),
   addEventListener   : (type, handle) => Dimensions.addEventListener(type, handle),
@@ -144,6 +180,8 @@ const linking = Linking
 const listviewdatasource = ListViewDataSource
 
 const modal = (props) => () => component(Modal, {props})
+
+const nativemodules = NativeModules
 
 const netinfo = NetInfo
 
@@ -253,17 +291,17 @@ const animate = (id, toValue = 1, duration = 500, cb, props) =>
   Animated.timing(id, {toValue, duration, ...props}).start(e => e.finished && cb && cb())
 
 const parallel = (arr, cb) =>
-  Animated.parallel(arr.map(([active, toValue, duration, props]) =>
+  Animated.parallel(arr.map(([active, toValue = 1, duration = 500, props]) =>
     Animated.timing(active, {toValue, duration, ...props})
   )).start(e => e.finished && cb && cb())
 
 const sequence = (arr, cb) =>
-  Animated.sequence(arr.map(([active, toValue, duration, props]) =>
+  Animated.sequence(arr.map(([active, toValue = 1, duration = 500, props]) =>
     Animated.timing(active, {toValue, duration, ...props})
   )).start(e => e.finished && cb && cb())
 
 const stagger = (delay, arr, cb) =>
-  Animated.stagger(delay, arr.map(([active, toValue, duration, props]) =>
+  Animated.stagger(delay, arr.map(([active, toValue = 1, duration = 500, props]) =>
     Animated.timing(active, {toValue, duration, ...props})
   )).start(e => e.finished && cb && cb())
 
@@ -288,13 +326,13 @@ const virtualizedlist = (style, props) => () => component(VirtualizedList, {}, {
 
 
 module.exports = {
-  updates,
+  update, store, storage,
 
   accessibilityinfo, activityindicator, alert, appregistry,
   appstate, asyncstorage, cameraroll, clipboard, dimensions,
   geolocation, imageeditor, imagestore, inputaccessoryview,
   interactionmanager, keyboard, keyboardavoidingview,
-  layoutanimation, linking, listviewdatasource, modal, netinfo,
+  layoutanimation, linking, listviewdatasource, modal, nativemodules, netinfo,
   panresponder, picker, pixelratio, platform, react, refreshcontrol,
   settings, share, slider, statusbar, stylesheet, systrace,
   toggle, touchablehighlight, touchablenativefeedback, touchableopacity,
