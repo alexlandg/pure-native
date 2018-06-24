@@ -112,7 +112,7 @@ npm i pure-native --save
   ### Storage
   Easy way to use Async Storage
 
-  ```
+  ```javascript
     import {storage} from 'pure-native'
 
     storage.set('msg', 'hello', () =>
