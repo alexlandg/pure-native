@@ -3,6 +3,8 @@ import React from 'react'
 
 const random = () => Math.random()
 
+const isarray = arr => arr instanceof Array
+
 
 class Component extends React.Component {
   constructor(props){
@@ -12,15 +14,15 @@ class Component extends React.Component {
       key: random()
     }
 
-    if (this.props.update) {
+    if (this.props.id) {
       this.update = this.props.update
-      this.id = this.props.id ? this.props.id instanceof Array ? this.props.id : [this.props.id] : [random()]
-      this.from = this.props.from ? this.props.from instanceof Array ? this.props.from : [this.props.from] : [random()]
+      this.id = isarray(this.props.id) ? this.props.id : [this.props.id]
+      this.from = this.props.from ? isarray(this.props.from) ? this.props.from : [this.props.from] : [random()]
       this.cb = () => this.setState({key: random()})
     }
   }
   componentWillMount(){
-    this.update && this.id.forEach(id => this.from.forEach(from =>
+    this.id && this.id.forEach(id => this.from.forEach(from =>
       this.update.sub(id, from, this.cb)
     ))
     this.props.willmount && this.props.willmount()
@@ -37,7 +39,7 @@ class Component extends React.Component {
     this.props.didupdate && this.props.didupdate()
   }
   componentWillUnmount(){
-    this.update && this.id.forEach(id => this.from.forEach(from =>
+    this.id && this.id.forEach(id => this.from.forEach(from =>
       this.update.unsub(id, from)
     ))
     this.props.willunmount && this.props.willunmount()
