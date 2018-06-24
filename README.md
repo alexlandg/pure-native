@@ -97,7 +97,8 @@ npm i pure-native --save
 
   ### Store
   Global object for your application.
-  ```
+  
+  ```javascript
     import {store, text} from 'pure-native'
 
     store.settings = {...}
